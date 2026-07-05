@@ -12,7 +12,7 @@ int is_same(char *actual_value, char *expect_value);
 
 char* compliment_1(char *input_number);
 char* compliment_2(char *input_number);
-
+                     
 void input(char *input_number, int *length);
 char* sign_or_unsign(char *input_number, char s);
 char* input_and_decide_type(char *input_number);
@@ -63,9 +63,9 @@ int get_length (char *str) {
 int is_same (char* actual_value, char* expect_value) {
 	
 	int i = 0;
-	int length_av = get_length (actual_value);
-	int length_ev = get_length (expect_value);
-	if (length_av != length_ev) 
+    int length_av = get_length (actual_value);
+    int length_ev = get_length (expect_value);
+  	if (length_av != length_ev)
 		return FALSE;
 
 	if (actual_value == NULL || expect_value == NULL) {
@@ -101,7 +101,6 @@ char* compliment_1(char *input_number) {
 char* compliment_2(char *input_number) {
 
 	int len = get_length(input_number) - 1;
-	int i = 0;
 	char bit_v = '1';
 	char *result = malloc (len + 2);
 	result = compliment_1(input_number);
@@ -290,7 +289,7 @@ char* binary_to_hex(char *input_number) {
 			result++;
 		}
 		else {
-			not_0 + 1;
+			not_0 = 1;
 		}
 		i++;
 	}
@@ -1470,10 +1469,8 @@ void test () {
 char* multi_hex_to_binary (char *input_value) {
 	
 	int len = get_length (input_value);
-	int size = len * 4;
 	char *result = malloc (200);
 	int j = 0;
-	int notthan0 = 0;
 	for (int i = 0; i < len; i++) {
 		int k = 0;
 		if (input_value[i] == '0' && i == 0) {

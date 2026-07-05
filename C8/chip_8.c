@@ -7,8 +7,8 @@
 
 #define F 15
 
-const int height = 1024;
-const int widght  = 728;
+const int height = 1000;
+const int widght = 1000;
 
 typedef uint8_t byte;
 typedef uint16_t bytes;
@@ -16,13 +16,14 @@ typedef uint16_t bytes;
 byte delay_timer = 0;
 byte sound_timer = 0;
 
-byte stack[12];
+bytes stack[16] = {};
 byte sp = 0;
 
-byte memory[4096];
-byte registers[16];
+byte memory[4096] = {};
+byte registers[16] = {};
 
 bytes program_counter = 0x200;
+bytes mem_address;
 
 bytes virtual_window[64][32];
 
@@ -32,7 +33,6 @@ struct decoded_opcode{
     byte  regis_n;
     byte  regis_nn;
     bytes regis_nnn;
-    bytes mem_address;
 };
 
 byte keys[] = {
@@ -74,46 +74,45 @@ const byte sprite_address[] = {
     0xF0, 0x80, 0xF0, 0x80, 0x80
 };
 
-void operation_0(bytes opcode, struct decoded_opcode op) {
+void operation_0(bytes opcode) {
 
     switch(opcode) {
         case 0x00E0:
-            ClearBackground(BLACK);
+            ClearBackground(RED);
             break;
         case 0x00EE:
             sp--;
             program_counter = stack[sp];
-            stack[sp] = 0;
             break;
     }
 }
 
-void operation_1(bytes opcode, struct decoded_opcode op) {
+void operation_1(struct decoded_opcode op) {
 
     program_counter = op.regis_nnn;
 }
 
-void operation_2(bytes opcode, struct decoded_opcode op) {
+void operation_2(struct decoded_opcode op) {
 
     stack[sp] = program_counter;
     sp++;
     program_counter = op.regis_nnn;
 }
 
-void operation_3(bytes opcode, struct decoded_opcode op) {
+void operation_3(struct decoded_opcode op) {
 
     if(registers[op.regis_x] == op.regis_nn) {
         program_counter += 2;
     }
 }
 
-void operation_4(bytes opcode, struct decoded_opcode op) {
+void operation_4(struct decoded_opcode op) {
 
     if(registers[op.regis_x] != op.regis_nn)
         program_counter += 2;
 }
 
-void operation_5(bytes opcode, struct decoded_opcode op) {
+void operation_5(struct decoded_opcode op) {
 
     if (op.regis_n == 0x0) {
         if(registers[op.regis_x] == registers[op.regis_y])
@@ -121,17 +120,17 @@ void operation_5(bytes opcode, struct decoded_opcode op) {
     }
 }
 
-void operation_6(bytes opcode, struct decoded_opcode op) {
+void operation_6(struct decoded_opcode op) {
 
     registers[op.regis_x] = op.regis_nn;
 }
 
-void operation_7(bytes opcode, struct decoded_opcode op) {
+void operation_7(struct decoded_opcode op) {
 
     registers[op.regis_x] += op.regis_nn;
 }
 
-void operation_8(bytes opcode, struct decoded_opcode op) {
+void operation_8(struct decoded_opcode op) {
 
     switch(op.regis_n) {
         case 0x0:
@@ -155,7 +154,7 @@ void operation_8(bytes opcode, struct decoded_opcode op) {
             registers[op.regis_x] -= registers[op.regis_y];
             break;
         case 0x6:
-            registers[F]          = registers[op.regis_x] & 0x0F;
+            registers[F]          = registers[op.regis_x] & 1;
             registers[op.regis_x] >>= 1;
             break;
         case 0x7:
@@ -163,58 +162,62 @@ void operation_8(bytes opcode, struct decoded_opcode op) {
             registers[op.regis_x]  = registers[op.regis_y] - registers[op.regis_x];
             break;
         case 0xE:
-            registers[F]          = registers[op.regis_x] & 0x0F;
+            registers[F]          = registers[op.regis_x] & 7;
             registers[op.regis_x] <<= 1;
             break;
     }
 }
 
-void operation_9(bytes opcode, struct decoded_opcode op) {
+void operation_9(struct decoded_opcode op) {
 
     if (op.regis_n == 0x0) {
-        if(registers[op.regis_x] != op.regis_y)
+        if(registers[op.regis_x] != registers[op.regis_y])
             program_counter += 2;
     }
 }
 
-void operation_A(bytes opcode, struct decoded_opcode op) {
+void operation_A(struct decoded_opcode op) {
 
-    op.mem_address = op.regis_nnn;
+    mem_address = op.regis_nnn;
 }
 
-void operation_B(bytes opcode, struct decoded_opcode op) {
+void operation_B(struct decoded_opcode op) {
 
     program_counter = op.regis_nnn + registers[0];
 }
 
-void operation_C(bytes opcode, struct decoded_opcode op) {
+void operation_C(struct decoded_opcode op) {
 
-    registers[op.regis_x] = (rand() % 255) & op.regis_nn;
+    registers[op.regis_x] = (rand() % 256) & op.regis_nn;
 }
 
-void operation_D(bytes opcode, struct decoded_opcode op) {
+void operation_D(struct decoded_opcode op) {
 
-    byte i        = memory[op.mem_address];
-    int x         = op.regis_x;
-    int y         = op.regis_y;
-    int a         = 0;
-    int r         = 0;
-    registers[F]  = 0;
-    while(r < op.regis_n && x < 64) {
-        while(y < 32) {
-            a                    = virtual_window[x][y];
-            virtual_window[x][y] = sprite_address[i];
-            if (a == 1 && virtual_window[x][y] == 0)
+    int a, j, i = 0;
+    byte x      = registers[op.regis_x] % 64;
+    byte y      = registers[op.regis_y] % 32;
+    bytes mem   = mem_address;
+    registers[F] = 0;
+    while(i < op.regis_n) {
+        j = 0;
+        x = registers[op.regis_x] % 64;
+        while(j < 8) {
+            a = virtual_window[x][y];
+            virtual_window[x][y] ^= (memory[mem] >> (7 - j)) & 1;
+            if(a && virtual_window[x][y])
                 registers[F] = 1;
-            y++;
-            i++;
+            x++;
+            j++;
+            x %= 64;
         }
-        y = 0;
-        r++;
+        i++;
+        y++;
+        mem++;
+        y %= 32;
     }
 }
 
-void operation_E(bytes opcode, struct decoded_opcode op) {
+void operation_E(struct decoded_opcode op) {
 
     switch(op.regis_nn) {
         case 0x9E:
@@ -228,9 +231,9 @@ void operation_E(bytes opcode, struct decoded_opcode op) {
     }
 }
 
-void operation_F(bytes opcode, struct decoded_opcode op) {
+void operation_F(struct decoded_opcode op) {
 
-    byte *hell     = &(memory[op.mem_address]);
+    byte *hell     = &(memory[mem_address]);
     byte *hell_b   = registers;
     switch(op.regis_nn) {
         case 0x07:
@@ -246,24 +249,24 @@ void operation_F(bytes opcode, struct decoded_opcode op) {
             sound_timer = registers[op.regis_x];
             break;
         case 0x1E:
-            op.mem_address += registers[op.regis_x];
+            mem_address += registers[op.regis_x];
             break;
         case 0x29:
-            op.mem_address = sprite_address[op.regis_x];
+            mem_address = ((registers[op.regis_x] & 0x0F) * 5);
             break;
         case 0x33:
-            bytes x                 = sprite_address[op.regis_x];
-            memory[op.mem_address + 2] = x % 10;
+            byte x                 = registers[op.regis_x];
+            memory[mem_address + 2] = x % 10;
             x                      /= 10;
-            memory[op.mem_address + 1] = x % 10;
+            memory[mem_address + 1] = x % 10;
             x                      /= 10;
-            memory[op.mem_address + 0] = x;
+            memory[mem_address + 0] = x;
             break;
         case 0x55:
-            memcpy(hell, hell_b, op.regis_x);
+            memcpy(hell, hell_b, op.regis_x + 1);
             break;
         case 0x65:
-            memcpy(hell_b, hell, op.regis_x);
+            memcpy(hell_b, hell, op.regis_x + 1);
             break;
     }
 }
@@ -282,52 +285,52 @@ void test_start(byte* memory) {
     op.regis_nnn = opcode & 0x0FFF;
     switch(opcode >> 12) {
         case 0x0:
-            operation_0(opcode, op);
+            operation_0(opcode);
             break;
         case 0x1:
-            operation_1(opcode, op);
+            operation_1(op);
             break;
         case 0x2:
-            operation_2(opcode, op);
+            operation_2(op);
             break;
         case 0x3:
-            operation_3(opcode, op);
+            operation_3(op);
             break;
         case 0x4:
-            operation_4(opcode, op);
+            operation_4(op);
             break;
         case 0x5:
-            operation_5(opcode, op);
+            operation_5(op);
             break;
         case 0x6:
-            operation_6(opcode, op);
+            operation_6(op);
             break;
         case 0x7:
-            operation_7(opcode, op);
+            operation_7(op);
             break;
         case 0x8:
-            operation_8(opcode, op);
+            operation_8(op);
             break;
         case 0x9:
-            operation_9(opcode, op);
+            operation_9(op);
             break;
         case 0xA:
-            operation_A(opcode, op);
+            operation_A(op);
             break;
         case 0xB:
-            operation_B(opcode, op);
+            operation_B(op);
             break;
         case 0xC:
-            operation_C(opcode, op);
+            operation_C(op);
             break;
         case 0xD:
-            operation_D(opcode, op);
+            operation_D(op);
             break;
         case 0xE:
-            operation_E(opcode, op);
+            operation_E(op);
             break;
         case 0xF:
-            operation_F(opcode, op);
+            operation_F(op);
             break;
         default:
             break;
@@ -337,22 +340,22 @@ void test_start(byte* memory) {
 void draw_in_screen() {
 
     int i,j;
+    int scale = 10;
     i = 0;
-    j = 0;
     while(i < 64) {
+        j = 0;
         while(j < 32) {
-            if(virtual_window[i][j] != 0)
-                DrawRectangle(i, j, 10, 10, WHITE);
+            if(virtual_window[i][j])
+                DrawRectangle(i * scale, j * scale, 1 * scale, 1 * scale, WHITE);
             j++;
         }
-        j = 0;
         i++;
     }
 }
 
 int main() {
 
-    FILE *game = fopen("../C8/2-ibm-logo.ch8", "rb");
+    FILE *game = fopen("../C8/4-flags.ch8", "rb");
     char *game_name = "IBM Logo";
     memcpy(memory, sprite_address, 80);
     fseek(game, 0L, SEEK_END);
@@ -365,7 +368,7 @@ int main() {
     while(!WindowShouldClose()) {
         test_start(memory);
         BeginDrawing();
-        ClearBackground(BLACK);
+        ClearBackground(RED);
         draw_in_screen();
         EndDrawing();
     }

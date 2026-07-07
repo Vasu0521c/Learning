@@ -146,11 +146,13 @@ void operation_8(struct decoded_opcode op) {
             registers[op.regis_x] ^= registers[op.regis_y];
             break;
         case 0x4:
-            registers[F]          = ((registers[op.regis_x] + registers[op.regis_y]) > 255);
+            int x                  = registers[op.regis_x] + registers[op.regis_y];
+            registers[F]           = (x > 255);
             registers[op.regis_x] += registers[op.regis_y];
             break;
         case 0x5:
-            registers[F]          = ((registers[op.regis_x] - registers[op.regis_y]) > 0);
+            int y                  = registers[op.regis_x] - registers[op.regis_y];
+            registers[F]           = (y < 0)? 0 : 1;
             registers[op.regis_x] -= registers[op.regis_y];
             break;
         case 0x6:
@@ -158,7 +160,8 @@ void operation_8(struct decoded_opcode op) {
             registers[op.regis_x] >>= 1;
             break;
         case 0x7:
-            registers[F]          = ((registers[op.regis_y] - registers[op.regis_x]) > 0);
+            int z                  = registers[op.regis_x] - registers[op.regis_y];
+            registers[F]           = (z < 0)? 0 : 1;
             registers[op.regis_x]  = registers[op.regis_y] - registers[op.regis_x];
             break;
         case 0xE:
@@ -271,7 +274,7 @@ void operation_F(struct decoded_opcode op) {
     }
 }
 
-void test_start(byte* memory) {
+void test_start() {
 
     struct decoded_opcode op;
     bytes opcode = memory[program_counter];
@@ -366,7 +369,7 @@ int main() {
     InitAudioDevice();
     SetTargetFPS(60);
     while(!WindowShouldClose()) {
-        test_start(memory);
+        test_start();
         BeginDrawing();
         ClearBackground(RED);
         draw_in_screen();

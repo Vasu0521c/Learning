@@ -41,8 +41,19 @@ void pop(vectar *vec) {
 	}
 
 	vec -> data[vec -> length - 1] = 0;
-	vec -> length--;
+	(vec -> length)--;
 	return;
+}
+
+int pop_first(vectar *vec) {
+
+    if (vec -> size == 0 || vec -> length == 0)
+        return 0;
+
+    int value = vec -> data[0];
+
+    (vec -> length)--;
+    return value;
 }
 
 void push(vectar *vec, int data) {
@@ -61,7 +72,7 @@ void push(vectar *vec, int data) {
 	}
 
 	vec -> data[vec -> length] = data;
-	vec -> length++;
+	(vec -> length)++;
 	return;
 }
 
@@ -72,10 +83,16 @@ int compare(vectar *vec_a, vectar *vec_b) {
 	}
 
 	int i = 0;
+    int *temp_a = vec_a -> data;
+    int *temp_b = vec_a -> data;
 
-	while(i < (vec_a -> size)) {
-		if((vec_a -> data[i]) != (vec_b -> data[i]))
+	while (i < (vec_a -> length)) {
+
+		if((temp_a) != (temp_b))
 			return 0;
+
+        temp_a++;
+        temp_b++;
 		i++;
 	}
 
@@ -130,6 +147,7 @@ vectar* clone(vectar *vec) {
 	cloned_vec -> size   = vec -> size;
 
 	int i                = vec -> length - 1;
+
 	while(i >= 0) {
 		cloned_vec -> data[i] = vec -> data[i];
 		i--;

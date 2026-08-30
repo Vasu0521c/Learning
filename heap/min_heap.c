@@ -1,5 +1,17 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "/home/darkking/Projects/custom_header_files/C_headers/intVector.h"
+
+void heap_up(vectar *heap, int index);
+void heap_down(vectar *heap, int index);
+
+void insert(vectar *heap, int data);
+
+int peek(vectar *heap);
+int heap_pop_first(vectar *heap);
+void display_heap(vectar *heap);
+
+void test();
 
 void heap_up(vectar *heap, int index) {
 
@@ -78,7 +90,7 @@ int peek(vectar *heap) {
 }
 
 
-int pop_first(vectar *heap) {
+int heap_pop_first(vectar *heap) {
 
     if(heap -> length == 0) {
         return 0;
@@ -108,6 +120,58 @@ void display_heap(vectar *heap) {
 
 int main() {
 
+    test();
     return 0;
 }
 
+
+void test() {
+
+    vectar *vec = new_vectar();
+    insert(vec, 15);
+
+    if(vec -> data[0] != 15) {
+        printf("Test 1 insertion failed\n");
+        exit(1);
+    }
+    else {
+        printf("Test 1 insertion passed\n");
+    }
+
+    insert(vec, 10);
+    /* if(vec -> data[0] != 15) { */
+    /*     printf("Test 2 insertion failed\n"); */
+    /*     exit(1); */
+    /* } */
+    /* else { */
+    /*     printf("Test 2 insertion passed\n"); */
+    /* } */
+
+    insert(vec, 20);
+    /* if(vec -> data[0] != 15) { */
+    /*     printf("Test 3 insertion failed\n"); */
+    /*     exit(1); */
+    /* } */
+    /* else { */
+    /*     printf("Test 3 insertion passed\n"); */
+    /* } */
+
+    insert(vec, 50);
+    /* if(vec -> data[0] != 15) { */
+    /*     printf("Test 4 insertion failed\n"); */
+    /*     exit(1); */
+    /* } */
+    /* else { */
+    /*     printf("Test 4 insertion passed\n"); */
+    /* } */
+
+    insert(vec, 30);
+    /* if(vec -> data[0] != 15) { */
+    /*     printf("Test 5 insertion failed\n"); */
+    /*     exit(1); */
+    /* } */
+    /* else { */
+    /*     printf("Test 5 insertion passed\n"); */
+    /* } */
+    display_heap(vec);
+}

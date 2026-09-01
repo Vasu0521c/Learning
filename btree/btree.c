@@ -19,6 +19,7 @@ Node* insert_as_sibling(Node *start, int value);
 Node* insert_as_child(Node *root, int value);
 Node* find_insert_position(Node *root, int value);
 Node* find_element(Node **node, int target);
+Node* copy_node(Node *dest, Node *src);
 
 void  delete_element(Node *relative, Node *target);
 void  insert_value(Node *btree, int value);
@@ -104,17 +105,6 @@ Node* find_insert_position(Node *root, int value) {
 }
 
 
-void insert_value(Node *tree, int value) {
-
-    Node *temp = tree;
-
-    if (temp -> key) 
-        temp = find_insert_position(temp, value);
-
-    temp -> key = value;
-}
-
-
 Node* find_element(Node **node, int target) {
 
     Node *current = *node;
@@ -141,16 +131,20 @@ Node* find_element(Node **node, int target) {
 }
 
 
-int get_child_count(Node *child) {
+Node* create_duplicate_node(Node *node) {
 
-    int length = 0;
+    Node *duplicate_node = malloc(sizeof(Node));
 
-    while (child != NULL) {
-        length++;
-        child = child -> sibling;
+    if (duplicate_node == NULL) {
+        perror("Memory allocation failed, malloc() function failed\n");
+        exit(1);
     }
 
-    return length;
+    duplicate_node -> child   = node -> child;
+    duplicate_node -> sibling = node -> sibling;
+    duplicate_node -> key     = node -> key;
+    duplicate_node -> order   = node -> order;
+    return duplicate_node;
 }
 
 
@@ -169,7 +163,7 @@ void delete_element(Node *relative, Node *target) {
         isChild = 1;
     }
 
-    child_count = get_child_count(current);
+    child_count = get_child_count(current -> child);
     switch (child_count) {
         case 0:
 
@@ -180,6 +174,7 @@ void delete_element(Node *relative, Node *target) {
             }
 
             relative -> sibling = current -> sibling;
+            free(current);
             return;
 
         case 1:
@@ -210,6 +205,17 @@ void delete_element(Node *relative, Node *target) {
 }
 
 
+void insert_value(Node *tree, int value) {
+
+    Node *temp = tree;
+
+    if (temp -> key) 
+        temp = find_insert_position(temp, value);
+
+    temp -> key = value;
+}
+
+
 void remove_value(Node *tree, int value) {
 
     Node *temp = tree;
@@ -229,6 +235,19 @@ void remove_value(Node *tree, int value) {
 
     delete_element(temp, target);
     return;
+}
+
+
+int get_child_count(Node *child) {
+
+    int length = 0;
+
+    while (child != NULL) {
+        length++;
+        child = child -> sibling;
+    }
+
+    return length;
 }
 
 
@@ -393,4 +412,22 @@ void test() {
     }
 
     printf("Node removal test 1 passed\n");
+
+    remove_value(btree, 20);
+
+    if (btree -> sibling -> sibling -> key == 20) {
+        printf("Node removal test 2 failed\n");
+        exit(1);
+    }
+
+    printf("Node removal test 2 passed\n");
+
+    remove_value(btree, 11);
+
+    if (btree -> sibling -> child -> key == 11) {
+        printf("Node removal test 3 failed\n");
+        exit(1);
+    }
+
+    printf("Node removal test 3 passed\n");
 }

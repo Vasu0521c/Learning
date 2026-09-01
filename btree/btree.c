@@ -12,18 +12,22 @@ struct Node {
                  *sibling;
 };
 
+// Forward function declarations
+ 
 Node* new_node();
 Node* insert_as_sibling(Node *start, int value);
 Node* insert_as_child(Node *root, int value);
 Node* find_insert_position(Node *root, int value);
 Node* find_element(Node **node, int target);
 
-void  delete_element(Node *realtive, Node *target);
+void  delete_element(Node *relative, Node *target);
 void  insert_value(Node *btree, int value);
 void  remove_value(Node *btree, int value);
 void  test();
 
 int   get_child_count(Node *node);
+
+
 
 Node* new_node() {
 
@@ -150,15 +154,18 @@ int get_child_count(Node *child) {
 }
 
 
-void delete_elelment(Node *relative, Node *target) {
+void delete_element(Node *relative, Node *target) {
 
     Node *current, *dummy;
     int  isChild, child_count;
+    current     = target;
 
     if (current -> order)
         (current -> order)--;
 
-    if (relative -> child == target) {
+    if (relative == NULL) {
+        isChild = 0;
+    } else if (relative -> child == target) {
         isChild = 1;
     }
 
@@ -190,14 +197,14 @@ void delete_elelment(Node *relative, Node *target) {
             return;
 
         default:
-            dummy = current->child;
+            dummy = current -> child;
 
             while(dummy -> sibling -> sibling != NULL)
                 dummy = dummy -> sibling;
 
             current -> key = dummy -> sibling -> key;
             free(dummy -> sibling);
-            dummy->sibling = NULL;
+            dummy -> sibling = NULL;
             return;
     }
 }
@@ -209,7 +216,7 @@ void remove_value(Node *tree, int value) {
     Node *target;
 
     if (temp -> key == value) {
-        delete_element(NULL, target);
+        delete_element(NULL, temp);
         return;
     }
 
@@ -377,4 +384,13 @@ void test() {
     }
 
     printf("Node insert_valueion test 15 passed\n");
+
+    remove_value(btree, 10);
+
+    if (btree -> key == 10) {
+        printf("Node removal test 1 failed\n");
+        exit(1);
+    }
+
+    printf("Node removal test 1 passed\n");
 }

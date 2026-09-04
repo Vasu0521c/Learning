@@ -5,8 +5,8 @@ typedef struct Node Node;
 
 struct Node {
 
-    int  key,
-         order;
+    int           key,
+                  order;
 
     struct Node  *child,
                  *sibling;
@@ -17,9 +17,10 @@ struct Node {
 Node* new_node();
 Node* insert_as_sibling(Node *start, int value);
 Node* insert_as_child(Node *root, int value);
-Node* find_insert_position(Node *root, int value);
-Node* find_element(Node **node, int target);
-Node* copy_node(Node *dest, Node *src);
+Node* get_insert_position(Node *root, int value);
+Node* get_element(Node **node, int target);
+Node* get_parent(Node *root, Node *target);
+Node* create_duplicate_node(Node *node);
 
 void  delete_element(Node *relative, Node *target);
 void  insert_value(Node *btree, int value);
@@ -27,7 +28,8 @@ void  remove_value(Node *btree, int value);
 void  test();
 
 int   get_child_count(Node *node);
-
+int   get_sibling_count(Node *node);                  // All sibling_count
+int   current_sibling_count(Node *current);           // rest of the sibling count from current sibling
 
 
 Node* new_node() {
@@ -63,7 +65,7 @@ Node* insert_as_sibling(Node *start, int value) {
 
         newnode -> key     = current -> key;
         newnode -> sibling = current -> sibling;
-        current -> sibling  = newnode;
+        current -> sibling = newnode;
 
         return current;
     }
@@ -84,7 +86,7 @@ Node* insert_as_child(Node *node, int value) {
 }
 
 
-Node* find_insert_position(Node *root, int value) {
+Node* get_insert_position(Node *root, int value) {
 
     Node *current, *previous;
     current = root;
@@ -105,7 +107,7 @@ Node* find_insert_position(Node *root, int value) {
 }
 
 
-Node* find_element(Node **node, int target) {
+Node* get_element(Node **node, int target) {
 
     Node *current = *node;
     Node *previous = current;
@@ -127,6 +129,36 @@ Node* find_element(Node **node, int target) {
         current = current -> sibling;
     }
 
+    return NULL;
+}
+
+
+Node *get_parent(Node *root, Node *target) {
+
+    Node *result, *dummy, *head_child;
+    head_child = result;
+    result = root;
+
+    while (result != NULL) {
+
+        dummy = result -> child;
+
+        while (dummy != NULL) {
+
+            if (dummy == target) {
+                return result;
+            }
+
+            dummy = dummy -> sibling;
+        }
+        result = result -> sibling;
+
+        if (result == NULL) {
+            result = head_child -> child;
+            head_child = result;
+        }
+
+    }
     return NULL;
 }
 
@@ -210,7 +242,7 @@ void insert_value(Node *tree, int value) {
     Node *temp = tree;
 
     if (temp -> key) 
-        temp = find_insert_position(temp, value);
+        temp = get_insert_position(temp, value);
 
     temp -> key = value;
 }
@@ -226,7 +258,7 @@ void remove_value(Node *tree, int value) {
         return;
     }
 
-    target = find_element(&temp, value);
+    target = get_element(&temp, value);
 
     if (target == NULL) {
         perror("No such element exist\n");
@@ -245,6 +277,34 @@ int get_child_count(Node *child) {
     while (child != NULL) {
         length++;
         child = child -> sibling;
+    }
+
+    return length;
+}
+
+
+int sibling_count(Node *root, Node *target) {
+
+    int length = 0;
+    Node *temp = get_parent(root, target);
+    temp = temp -> child;
+
+    while (temp != NULL) {
+        temp = temp -> sibling;
+        length++;
+    }
+
+    return length;
+}
+
+
+int current_sibling_count(Node *current) {
+
+    int length = 0;
+
+    while (current != NULL) {
+        current = current -> sibling;
+        length++;
     }
 
     return length;
